@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+<title>kasierWatch · Discover. Explore. Enjoy.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000;
+    --panel: #0e0e10;
+    --panel-2: #17171a;
+    --line: #232328;
+    --text: #f2f2f2;
+    --muted: #8b8b94;
+    --accent: #e8ff59;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  img { display: block; }
+
+  /* ---------- Header ---------- */
+  header {
+    position: fixed; inset: 0 0 auto 0; z-index: 50;
+    display: flex; align-items: center; gap: 28px;
+    padding: 16px 4vw;
+    background: linear-gradient(#000d, #0000);
+    transition: background .25s;
+  }
+  header.solid { background: #000000f0; backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .logo {
+    font-family: "Space Grotesk", sans-serif; font-weight: 700;
+    font-size: 22px; letter-spacing: .02em;
+  }
+  .logo span { color: var(--accent); }
+  header nav { display: flex; gap: 20px; }
+  header nav a { color: var(--muted); font-size: 14px; font-weight: 500; transition: color .15s; position: relative; }
+  header nav a:hover, header nav a.active { color: var(--text); }
+  header nav a.active::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; border-radius: 2px; background: var(--accent); }
+
+  /* ---------- Mobile tab bar ---------- */
+  .tabbar { display: none; }
+  @media (max-width: 720px) {
+    .tabbar {
+      position: fixed; inset: auto 0 0 0; z-index: 55; display: grid; grid-template-columns: repeat(3, 1fr);
+      background: #000000f2; backdrop-filter: blur(10px); border-top: 1px solid var(--line);
+      padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
+    }
+    .tabbar a { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; font-size: 11px; font-weight: 500; color: var(--muted); }
+    .tabbar a.active { color: var(--accent); }
+    body { padding-bottom: 64px; }
+  }
+  .search {
+    margin-left: auto; display: flex; align-items: center; gap: 8px;
+    background: #ffffff10; border: 1px solid #ffffff18; border-radius: 999px;
+    padding: 8px 14px; width: min(280px, 40vw);
+  }
+  .search input { background: none; border: 0; outline: 0; color: var(--text); font: inherit; font-size: 14px; width: 100%; }
+  .search svg { flex: none; opacity: .6; }
+
+  /* ---------- Demo banner ---------- */
+  .demo-note {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 60;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 8px 16px; font-size: 13px; color: var(--muted); white-space: nowrap;
+  }
+  .demo-note b { color: var(--accent); font-weight: 600; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative; height: min(82vh, 760px); min-height: 480px;
+    display: flex; align-items: flex-end; padding: 0 4vw 9vh;
+    background-size: cover; background-position: center 20%;
+  }
+  .hero::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, #000 0%, #000a 40%, #0000 75%), linear-gradient(0deg, #000 0%, #0000 45%);
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 560px; }
+  .eyebrow { color: var(--accent); font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 12px; }
+  .hero h1 { font-family: "Space Grotesk", sans-serif; font-size: clamp(34px, 5.5vw, 64px); line-height: 1.02; margin-bottom: 14px; }
+  .hero p { color: #cfcfd4; line-height: 1.55; font-size: 15px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .meta .star { color: var(--accent); font-weight: 600; }
+  .btns { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 20px; border-radius: 999px; font-weight: 600; font-size: 14px;
+    transition: transform .12s, background .15s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #f2ff9a; }
+  .btn-ghost { background: #ffffff14; border: 1px solid #ffffff22; }
+  .btn-ghost:hover { background: #ffffff24; }
+
+  /* ---------- Rows ---------- */
+  main { padding-bottom: 80px; }
+  .row { margin: 0 0 36px; }
+  .row-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 4vw; margin-bottom: 12px; }
+  .row-head h2 { font-family: "Space Grotesk", sans-serif; font-size: 20px; font-weight: 500; }
+  .row-ctrl { display: flex; gap: 6px; }
+  .row-ctrl button {
+    width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line);
+    display: grid; place-items: center; color: var(--muted);
+  }
+  .row-ctrl button:hover { color: var(--text); border-color: #444; }
+  .track {
+    display: grid; grid-auto-flow: column; grid-auto-columns: clamp(130px, 14vw, 180px);
+    gap: 12px; overflow-x: auto; padding: 4px 4vw 8px; scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .track::-webkit-scrollbar { display: none; }
+
+  /* ---------- Cards ---------- */
+  .card { scroll-snap-align: start; text-align: left; }
+  .poster {
+    position: relative; aspect-ratio: 2/3; border-radius: var(--radius); overflow: hidden;
+    background: var(--panel-2); border: 1px solid #ffffff0d;
+    transition: transform .2s, border-color .2s;
+  }
+  .card:hover .poster { transform: translateY(-4px); border-color: #ffffff40; }
+  .poster img { width: 100%; height: 100%; object-fit: cover; }
+  .poster .ph {
+    position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 14px;
+    font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 18px; line-height: 1.1;
+  }
+  .badge {
+    position: absolute; top: 8px; left: 8px; background: #000c; border-radius: 6px;
+    padding: 3px 7px; font-size: 11px; font-weight: 600; color: var(--accent);
+  }
+  .card-title { margin-top: 8px; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ---------- Pages ---------- */
+  .page { padding: 96px 4vw 0; }
+  .page h1 { font-family: "Space Grotesk", sans-serif; font-size: 34px; margin-bottom: 6px; }
+  .page .sub { color: var(--muted); margin-bottom: 24px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+  .seg { display: inline-flex; background: var(--panel-2); border-radius: 999px; padding: 3px; border: 1px solid var(--line); }
+  .seg button { padding: 7px 16px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--muted); }
+  .seg button.on { background: var(--text); color: #000; }
+  select {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 13px;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .chip {
+    padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line);
+    font-size: 13px; color: var(--muted); transition: all .15s;
+  }
+  .chip:hover { color: var(--text); border-color: #444; }
+  .chip.on { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 22px 14px; }
+  .more { display: flex; justify-content: center; margin-top: 32px; }
+  .empty { color: var(--muted); padding: 60px 0; text-align: center; }
+
+  /* ---------- Modal ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 100; background: #000c; backdrop-filter: blur(4px);
+    display: none; overflow-y: auto; padding: 5vh 16px;
+  }
+  .overlay.open { display: block; }
+  .modal {
+    max-width: 1080px; margin: 0 auto; background: var(--panel); border-radius: 16px;
+    overflow: hidden; border: 1px solid var(--line); animation: pop .22s ease-out;
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+  .m-hero { position: relative; aspect-ratio: 16/7; background-size: cover; background-position: center; }
+  .m-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, var(--panel) 0%, #0000 70%); }
+  .m-hero iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 2; }
+  .m-hero.playing { aspect-ratio: 16/9; }
+  .m-hero.playing::after { display: none; }
+  .m-hero.playing + .m-body { margin-top: 0; padding-top: 22px; }
+  .close {
+    position: absolute; top: 14px; right: 14px; z-index: 3; width: 36px; height: 36px;
+    border-radius: 50%; background: #000b; display: grid; place-items: center; font-size: 18px;
+  }
+  .m-body { padding: 0 32px 32px; margin-top: -90px; position: relative; z-index: 1; }
+  .m-body h2 { font-family: "Space Grotesk", sans-serif; font-size: clamp(26px, 4vw, 40px); line-height: 1.05; margin-bottom: 10px; }
+  .m-head { display: flex; align-items: flex-end; gap: 22px; margin-bottom: 22px; }
+  .m-poster { flex: none; width: 132px; aspect-ratio: 2/3; border-radius: var(--radius); overflow: hidden; background: var(--panel-2); border: 1px solid #ffffff1a; box-shadow: 0 12px 30px #000a; }
+  .m-poster img { width: 100%; height: 100%; object-fit: cover; }
+  .m-head .meta { margin-bottom: 0; }
+  .m-head > div:last-child, .m-main, .m-side { min-width: 0; }
+  .m-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 36px; align-items: start; }
+  .m-side .playback-panel { margin-top: 0; }
+  .m-side .server-choice { flex-basis: 100%; }
+  .m-main .btns { margin-top: 20px; }
+  @media (max-width: 860px) {
+    .m-layout { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .m-side .server-choice { flex-basis: 165px; }
+  }
+  .tagline { color: var(--muted); font-style: italic; margin-bottom: 12px; }
+  .overview { color: #d4d4d9; line-height: 1.6; font-size: 15px; max-width: 680px; }
+  .section-label { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 28px 0 12px; font-weight: 600; }
+  .providers { display: flex; flex-direction: column; gap: 12px; }
+  .prov-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .prov-group > span { font-size: 13px; color: var(--muted); width: 64px; }
+  .prov { width: 44px; height: 44px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: var(--panel-2); }
+  .prov img { width: 100%; height: 100%; }
+  .prov-link { font-size: 13px; color: var(--accent); margin-top: 4px; display: inline-block; }
+  .cast { display: grid; grid-auto-flow: column; grid-auto-columns: 96px; gap: 12px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+  .person { text-align: center; }
+  .person .face {
+    width: 96px; height: 96px; border-radius: 50%; overflow: hidden; background: var(--panel-2);
+    display: grid; place-items: center; font-family: "Space Grotesk"; font-size: 24px; color: var(--muted);
+  }
+  .person .face img { width: 100%; height: 100%; object-fit: cover; }
+  .person b { display: block; font-size: 12px; font-weight: 500; margin-top: 6px; }
+  .person small { font-size: 11px; color: var(--muted); }
+
+  .spinner { width: 28px; height: 28px; border: 3px solid #333; border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 80px auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error { margin: 120px auto; max-width: 520px; text-align: center; color: var(--muted); line-height: 1.6; }
+  .error b { color: var(--text); display: block; margin-bottom: 8px; font-size: 18px; }
+
+  footer { padding: 30px 4vw 60px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
+
+  @media (max-width: 720px) {
+    header nav { display: none; }
+    header { gap: 14px; }
+    .search { width: auto; flex: 1; }
+    .m-body { padding: 0 20px 24px; margin-top: -60px; }
+    .m-head { gap: 14px; }
+    .m-poster { width: 88px; }
+    .overlay { padding: 0; }
+    .modal { border-radius: 0; border: 0; min-height: 100%; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+    .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -4vw 20px; padding: 0 4vw; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip { flex: none; }
+    .page { padding-top: 84px; }
+    .hero { padding-bottom: 6vh; }
+  }
+
+  .poster img { position: absolute; inset: 0; }
+  .poster .ph { background: linear-gradient(160deg, #26262c, #0c0c0e); color: #bbb; font-size: 15px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .crew { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 14px; font-size: 13px; color: #cfcfd4; }
+  .crew b { color: var(--muted); font-weight: 500; margin-right: 4px; }
+  .episodes { display: flex; flex-direction: column; gap: 10px; max-height: 460px; overflow-y: auto; padding-right: 6px; }
+  .ep { display: grid; grid-template-columns: 168px 1fr auto; align-items: center; gap: 14px; padding: 10px; border-radius: var(--radius); background: var(--panel-2); border: 1px solid #ffffff08; }
+  .ep-thumb { position: relative; aspect-ratio: 16/9; border-radius: 6px; overflow: hidden; background: #222; display: grid; place-items: center; color: var(--muted); font-family: "Space Grotesk"; }
+  .ep-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ep-info b { font-size: 14px; font-weight: 600; display: block; }
+  .ep-info small { color: var(--muted); font-size: 12px; }
+  .ep-info p { color: #bdbdc4; font-size: 13px; line-height: 1.5; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .badge.server { top: auto; bottom: 8px; background: var(--accent); color: #000; }
+  .ep-play { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #000; font-size: 14px; display: grid; place-items: center; transition: transform .12s; }
+  .ep-play:hover { transform: scale(1.08); }
+  @media (max-width: 720px) { .ep { grid-template-columns: 96px 1fr auto; gap: 10px; } .ep-info p { -webkit-line-clamp: 2; } }
+  /* ---------- External playback selection ---------- */
+  .playback-panel { margin-top: 24px; padding: 20px; background: #141417; border: 1px solid #303034; border-radius: 14px; }
+  .adfree-toggle { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; background: #1d2119; border: 1px solid #3c4830; cursor: pointer; }
+  .adfree-toggle input { accent-color: var(--accent); width: 18px; height: 18px; flex-shrink: 0; }
+  .adfree-toggle span { display: flex; flex-direction: column; gap: 3px; }
+  .adfree-toggle b { font-size: 14px; }
+  .adfree-toggle small { font-size: 12px; color: #b8c0b0; line-height: 1.45; }
+  .server-choices { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .server-choice { min-width: 150px; flex: 1 1 165px; display: flex; align-items: flex-start; flex-direction: column; gap: 5px; padding: 12px 14px; border-radius: 10px; background: #202024; border: 1px solid #424249; text-align: left; }
+  .server-choice b { font-size: 14px; }
+  .server-choice small { color: #aaaab2; font-size: 11px; line-height: 1.3; }
+  .server-choice:hover:not(:disabled) { border-color: #8d9d53; }
+  .server-choice.selected { background: #e8ff59; color: #101010; border-color: #e8ff59; }
+  .server-choice.selected small { color: #373a2e; }
+  .server-choice:disabled { opacity: .42; cursor: not-allowed; }
+  .play-status { margin-top: 12px; color: #d4d4d9; font-size: 12px; line-height: 1.5; }
+  .security-note { border-top: 1px solid #333; padding-top: 12px; margin-top: 12px; color: #9d9da4; font-size: 12px; line-height: 1.5; }
+  .tmdb-details { margin-top: 12px; border-top: 1px solid #333; padding-top: 10px; }
+  .tmdb-details summary { cursor: pointer; color: #c9c9d0; font-size: 12px; }
+  .tmdb-editor { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+  .tmdb-editor label { color: #a4a4ac; font-size: 12px; }
+  .tmdb-editor input { min-width: 120px; flex: 1 1 140px; background: #080809; border: 1px solid #505057; color: white; padding: 10px; border-radius: 8px; font: inherit; font-size: 13px; }
+  .tmdb-editor button { padding: 9px 14px; }
+  .ep.active-ep { border-color: #c3de53; }
+  button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  @media (max-width: 720px) { .playback-panel { padding: 14px; } .m-hero.playing + .m-body { padding-top: 18px; } }
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <a href="#home" class="logo">kasier<span>Watch</span></a>
+  <nav>
+    <a href="#home" data-nav="home">Home</a>
+    <a href="#discover" data-nav="discover">Discover</a>
+    <a href="#watchlist" data-nav="watchlist">Watchlist</a>
+  </nav>
+  <label class="search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Search movies & shows" autocomplete="off">
+  </label>
+</header>
+
+<main id="app"></main>
+
+<footer>
+  Metadata from Cinemeta. Optional availability via TMDB &amp; JustWatch. Third-party embeds are independent services; kasierWatch cannot verify content rights or block ads inside their players.
+</footer>
+
+<nav class="tabbar" aria-label="Main">
+  <a href="#home" data-nav="home"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</a>
+  <a href="#discover" data-nav="discover"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</a>
+  <a href="#watchlist" data-nav="watchlist"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Watchlist</a>
+</nav>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+
+<script>
+/* =====================================================================
+ *  kasierWatch — titles, posters, ratings and trailers come from Cinemeta
+ *  (Stremio's public metadata catalog). No key needed for any of that.
+ *
+ *  🔑 OPTIONAL: TMDB key, only used for the "Where to watch" section
+ *  (which services stream / rent / sell a title). Paste either your
+ *  v3 "API Key" or v4 "Read Access Token" (starts with "eyJ").
+ *  Leave it "" and that section shows a JustWatch search link instead.
+ * ===================================================================== */
+const TMDB_API_KEY = "";
+
+/* Country used for "Where to watch" (two-letter code: US, GB, CA, DE…) */
+const REGION = "US";
+
+
+/* =====================================================================
+ *  kasierWatch EXTERNAL PLAYBACK
+ *  VidLink: no ads were observed in your own test, not a guarantee.
+ *  VidFast: ads were observed in your test; optional backup only.
+ *  Both were reported to need UNSANDBOXED iframes to play.
+ *  Browser restrictions prevent this page from filtering a cross-origin
+ *  player's internal ads, popups or network requests.
+ *
+ *  For an actually ad-free-by-default experience, keep
+ *  "Prefer no ads" enabled. This offers only VidLink; it DOES NOT claim
+ *  to implement an ad blocker or guarantee that VidLink stays ad-free.
+ * ===================================================================== */
+const STREAM_SERVICES = Object.freeze([
+  {
+    id: "vidlink", name: "VidLink", adFreeObserved: true,
+    movieUrl: "https://vidlink.pro/movie/{tmdb}?primaryColor=e8ff59&autoplay=false",
+    episodeUrl: "https://vidlink.pro/tv/{tmdb}/{season}/{episode}?primaryColor=e8ff59&autoplay=false"
+  },
+  {
+    id: "vidfast", name: "VidFast", adFreeObserved: false,
+    movieUrl: "https://vidfast.vc/movie/{tmdb}?autoPlay=false",
+    episodeUrl: "https://vidfast.vc/tv/{tmdb}/{season}/{episode}?autoPlay=false"
+  }
+]);
+const LIBRARY_URL = ""; // Optional legacy own-library JSON URL, for poster badges only.
+const PREFERENCE_KEY = "lumen.adfreeOnly.v1";
+const SERVER_KEY = "lumen.preferredEmbed.v1";
+const TMDB_OVERRIDE_PREFIX = "lumen.tmdbOverride.";
+
+const getAdFreeOnly = () => {
+  try { return localStorage.getItem(PREFERENCE_KEY) !== "false"; }
+  catch { return true; }
+};
+const getPreferredServer = () => {
+  try { return localStorage.getItem(SERVER_KEY) || "vidlink"; }
+  catch { return "vidlink"; }
+};
+const setLocal = (key, value) => { try { localStorage.setItem(key, value); } catch {} };
+
+const CINEMETA = "https://v3-cinemeta.strem.io";
+const TMDB = "https://api.themoviedb.org/3";
+const THIS_YEAR = new Date().getFullYear();
+
+const GENRES = {
+  movie: ["Action","Adventure","Animation","Biography","Comedy","Crime","Documentary","Drama","Family","Fantasy","History","Horror","Mystery","Romance","Sci-Fi","Sport","Thriller","War","Western"],
+  series: ["Action","Adventure","Animation","Biography","Comedy","Crime","Documentary","Drama","Family","Fantasy","History","Horror","Mystery","Romance","Sci-Fi","Sport","Thriller","War","Western","Reality-TV","Talk-Show","Game-Show"]
+};
+
+const $ = (s, el = document) => el.querySelector(s);
+const app = $("#app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* ---------- Cinemeta helpers ---------- */
+// catalog("movie", "top", { genre: "Action", skip: 100 }) → array of titles
+async function catalog(type, id, extra = {}) {
+  const parts = Object.entries(extra).filter(([, v]) => v !== undefined && v !== "")
+    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`);
+  const url = `${CINEMETA}/catalog/${type}/${id}${parts.length ? "/" + parts.join("&") : ""}.json`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Couldn't reach Cinemeta (${res.status}).`);
+  return ((await res.json()).metas || []).map(m => ({ ...m, type: m.type || type }));
+}
+async function meta(type, id) {
+  const res = await fetch(`${CINEMETA}/meta/${type}/${id}.json`);
+  if (!res.ok) throw new Error(`Couldn't load this title (${res.status}).`);
+  return (await res.json()).meta;
+}
+
+/* ---------- Optional TMDB helper (Where to watch only) ---------- */
+async function tmdb(path) {
+  const key = TMDB_API_KEY.trim(), bearer = key.startsWith("eyJ");
+  const url = new URL(TMDB + path);
+  if (!bearer) url.searchParams.set("api_key", key);
+  const res = await fetch(url, bearer ? { headers: { Authorization: `Bearer ${key}` } } : {});
+  if (!res.ok) throw new Error(`TMDB ${res.status}`);
+  return res.json();
+}
+
+/* ---------- External embeds & optional local library badges ---------- */
+let LIBRARY = null;
+async function loadLibrary() {
+  if (!LIBRARY_URL.trim()) return;
+  try {
+    const response = await fetch(LIBRARY_URL);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    LIBRARY = new Set(JSON.stringify(await response.json()).match(/tt\d{5,}/g) || []);
+  } catch (e) {
+    console.warn("Couldn't load your optional library list:", e);
+    LIBRARY = new Set();
+  }
+}
+const canPlay = () => STREAM_SERVICES.length > 0;
+const numericId = id => /^\d+$/.test(String(id ?? "")) && Number(id) > 0;
+function tmdbIdFor(m) {
+  let stored = "";
+  try { stored = localStorage.getItem(TMDB_OVERRIDE_PREFIX + m.id) || ""; } catch {}
+  if (numericId(stored)) return String(stored);
+  const id = m.moviedb_id ?? m.tmdb_id ?? "";
+  return numericId(id) ? String(id) : "";
+}
+async function resolveTmdbId(m) {
+  if (tmdbIdFor(m) || !TMDB_API_KEY.trim() || !/^tt\d{5,}$/.test(m.id)) return;
+  try {
+    const mapped = await tmdb(`/find/${encodeURIComponent(m.id)}?external_source=imdb_id`);
+    const result = (m.type === "series" ? mapped.tv_results : mapped.movie_results)?.[0]?.id;
+    if (numericId(result)) m.moviedb_id = String(result);
+  } catch (error) { console.warn("TMDB ID lookup failed:", error); }
+}
+function embedUrl(provider, m, episode) {
+  const tmdb = tmdbIdFor(m);
+  if (!tmdb) return null;
+  const template = m.type === "series" ? provider.episodeUrl : provider.movieUrl;
+  if (!template) return null;
+  const values = { tmdb, season: episode?.season, episode: episode?.episode };
+  if (m.type === "series" && (!numericId(values.season) && String(values.season) !== "0" || !numericId(values.episode))) return null;
+  const expanded = template.replace(/\{(tmdb|season|episode)\}/g, (_, key) => encodeURIComponent(values[key] ?? ""));
+  if (/\{[^{}]+\}/.test(expanded)) return null;
+  try {
+    const url = new URL(expanded);
+    return url.protocol === "https:" ? url.href : null;
+  } catch { return null; }
+}
+function playOnServer(url, providerName) {
+  const h = $("#mhero");
+  if (!h || !/^https:\/\//.test(url)) return;
+  h.querySelectorAll("iframe").forEach(frame => frame.remove());
+  h.classList.add("playing");
+  const iframe = document.createElement("iframe");
+  iframe.src = url;
+  iframe.title = `${providerName} external video player`;
+  iframe.allow = "autoplay; fullscreen; encrypted-media; picture-in-picture";
+  iframe.allowFullscreen = true;
+  iframe.referrerPolicy = "strict-origin-when-cross-origin";
+  // Intentionally no sandbox: both providers rejected sandboxed frames in user tests.
+  // This is a compatibility tradeoff, NOT ad blocking or popup prevention.
+  h.appendChild(iframe);
+  $("#modal").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ---------- Small formatters ---------- */
+const typeLabel = t => t === "series" ? "Series" : "Movie";
+const rating = x => x.imdbRating ? (+x.imdbRating).toFixed(1) : "–";
+const yearOf = x => String(x.releaseInfo || x.year || "").replace(/[–-]$/, "–now");
+const bgOf = x => x.background || `https://images.metahub.space/background/medium/${x.id}/img`;
+const posterOf = x => x.poster || `https://images.metahub.space/poster/small/${x.id}/img`;
+
+/* ---------- Watchlist (saved in this browser) ---------- */
+const WL_KEY = "lumen.watchlist.v2";
+function wlGet() { try { return JSON.parse(localStorage.getItem(WL_KEY)) || []; } catch { return []; } }
+function wlSet(list) { try { localStorage.setItem(WL_KEY, JSON.stringify(list)); } catch {} }
+const wlHas = (id) => wlGet().some(x => x.id === id);
+function wlToggle(m) {
+  let list = wlGet();
+  if (wlHas(m.id)) list = list.filter(x => x.id !== m.id);
+  else list.unshift({ id: m.id, type: m.type, name: m.name, poster: m.poster, imdbRating: m.imdbRating, releaseInfo: m.releaseInfo });
+  wlSet(list);
+  return wlHas(m.id);
+}
+
+/* ---------- Card ---------- */
+const cache = new Map();
+function card(x) {
+  cache.set(x.id, x);
+  return `<button class="card" data-open="${esc(x.type)}:${esc(x.id)}">
+    <div class="poster">
+      <div class="ph">${esc(x.name)}</div>
+      <img loading="lazy" src="${esc(posterOf(x))}" alt="" onerror="this.remove()">
+      <span class="badge">★ ${rating(x)}</span>
+      ${LIBRARY?.has(x.id) ? `<span class="badge server">On server</span>` : ""}
+    </div>
+    <div class="card-title">${esc(x.name)}</div>
+    <div class="card-sub">${esc(yearOf(x)) || "—"} · ${typeLabel(x.type)}</div>
+  </button>`;
+}
+const dedupe = list => { const seen = new Set(); return list.filter(x => x.id && !seen.has(x.id) && seen.add(x.id)); };
+
+/* ---------- Views ---------- */
+const loading = () => app.innerHTML = `<div class="spinner"></div>`;
+const showError = e => app.innerHTML = `<div class="error"><b>Something went wrong</b>${esc(e.message)}</div>`;
+
+async function viewHome() {
+  loading();
+  const [movies, shows, topMovies, topShows, newMovies, newShows] = await Promise.all([
+    catalog("movie", "top"), catalog("series", "top"),
+    catalog("movie", "imdbRating"), catalog("series", "imdbRating"),
+    catalog("movie", "year", { genre: THIS_YEAR }), catalog("series", "year", { genre: THIS_YEAR })
+  ]);
+  const hero = movies.find(x => x.description) || movies[0];
+  cache.set(hero.id, hero);
+
+  const row = (title, list) => `<section class="row">
+      <div class="row-head"><h2>${title}</h2>
+        <div class="row-ctrl"><button data-scroll="-1" aria-label="Back">‹</button><button data-scroll="1" aria-label="Next">›</button></div>
+      </div>
+      <div class="track">${dedupe(list).slice(0, 30).map(card).join("")}</div>
+    </section>`;
+
+  app.innerHTML = `
+    <section class="hero" style="background-image:url('${esc(bgOf(hero))}')">
+      <div class="hero-content">
+        <div class="eyebrow">Popular right now</div>
+        <h1>${esc(hero.name)}</h1>
+        <div class="meta"><span class="star">★ ${rating(hero)}</span><span>${esc(yearOf(hero))}</span><span>${typeLabel(hero.type)}</span></div>
+        <p>${esc(hero.description)}</p>
+        <div class="btns">
+          <button class="btn btn-primary" data-open="${hero.type}:${hero.id}" data-play="1">▶ Watch trailer</button>
+          <button class="btn btn-ghost" data-open="${hero.type}:${hero.id}">More info</button>
+        </div>
+      </div>
+    </section>
+    ${row("Popular movies", movies.slice(1))}
+    ${row("Popular series", shows)}
+    ${row(`New in ${THIS_YEAR} · Movies`, newMovies)}
+    ${row(`New in ${THIS_YEAR} · Series`, newShows)}
+    ${row("Top rated movies", topMovies)}
+    ${row("Top rated series", topShows)}`;
+}
+
+const ds = { type: "movie", genre: "", sort: "top", items: [], done: false };
+async function viewDiscover() {
+  loading();
+  app.innerHTML = `<div class="page">
+    <h1>Discover</h1><p class="sub">Browse by genre or rating.</p>
+    <div class="toolbar">
+      <div class="seg">
+        <button data-dtype="movie" class="${ds.type === "movie" ? "on" : ""}">Movies</button>
+        <button data-dtype="series" class="${ds.type === "series" ? "on" : ""}">Series</button>
+      </div>
+      <div class="seg">
+        <button data-dsort="top" class="${ds.sort === "top" ? "on" : ""}">Popular</button>
+        <button data-dsort="imdbRating" class="${ds.sort === "imdbRating" ? "on" : ""}">Top rated</button>
+      </div>
+    </div>
+    <div class="chips">
+      <button class="chip ${!ds.genre ? "on" : ""}" data-genre="">All</button>
+      ${GENRES[ds.type].map(g => `<button class="chip ${ds.genre === g ? "on" : ""}" data-genre="${g}">${g}</button>`).join("")}
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="more" id="more"></div>
+  </div>`;
+  ds.items = []; ds.done = false;
+  await loadMore();
+}
+async function loadMore() {
+  const more = $("#more");
+  more.innerHTML = `<div class="spinner" style="margin:20px auto"></div>`;
+  const page = await catalog(ds.type, ds.sort, { genre: ds.genre, skip: ds.items.length || undefined });
+  const fresh = page.filter(x => !ds.items.some(y => y.id === x.id));
+  ds.items.push(...fresh);
+  if (!fresh.length) ds.done = true;
+  $("#grid").insertAdjacentHTML("beforeend", fresh.map(card).join(""));
+  if (!ds.items.length) $("#grid").outerHTML = `<div class="empty">Nothing here. Try another genre.</div>`;
+  more.innerHTML = ds.done ? "" : `<button class="btn btn-ghost" id="loadMore">Load more</button>`;
+  const btn = $("#loadMore");
+  if (btn) btn.onclick = () => loadMore().catch(showError);
+}
+
+async function viewSearch(q) {
+  if (!q) return viewHome();
+  loading();
+  const [m, s] = await Promise.all([
+    catalog("movie", "top", { search: q }).catch(() => []),
+    catalog("series", "top", { search: q }).catch(() => [])
+  ]);
+  const list = dedupe([...m, ...s]);
+  app.innerHTML = `<div class="page"><h1>Results for “${esc(q)}”</h1><p class="sub">${list.length} title${list.length === 1 ? "" : "s"}</p>
+    ${list.length ? `<div class="grid">${list.map(card).join("")}</div>` : `<div class="empty">No matches. Try a different spelling.</div>`}</div>`;
+}
+
+function viewWatchlist() {
+  const list = wlGet();
+  app.innerHTML = `<div class="page"><h1>Your watchlist</h1><p class="sub">Saved in this browser.</p>
+    ${list.length ? `<div class="grid">${list.map(card).join("")}</div>`
+      : `<div class="empty">Nothing saved yet. Open any title and hit “+ Watchlist”.</div>`}</div>`;
+}
+
+/* ---------- Detail modal and playback provider controls ---------- */
+const overlay = $("#overlay"), modal = $("#modal");
+async function openDetail(key, autoplay) {
+  const i = key.indexOf(":"), type = key.slice(0, i), id = key.slice(i + 1);
+  overlay.classList.add("open"); document.body.style.overflow = "hidden";
+  modal.innerHTML = `<div class="spinner"></div>`;
+
+  let m;
+  try {
+    m = { ...(cache.get(id) || {}), ...(await meta(type, id)), type };
+    await resolveTmdbId(m);
+  } catch (e) {
+    modal.innerHTML = `<button class="close" data-close style="position:relative;float:right;margin:14px">✕</button><div class="error"><b>Couldn't load this title</b>${esc(e.message)}</div>`;
+    return;
+  }
+
+  const ytId = m.trailerStreams?.[0]?.ytId || m.trailers?.find(t => t.type === "Trailer")?.source || m.trailers?.[0]?.source;
+  const genres = m.genres || m.genre || [];
+  const cast = (m.cast || []).slice(0, 12);
+  const crew = [
+    m.director?.length ? `<span><b>Director</b> ${esc([].concat(m.director).join(", "))}</span>` : "",
+    m.writer?.length ? `<span><b>Writer</b> ${esc([].concat(m.writer).slice(0, 3).join(", "))}</span>` : ""
+  ].join("");
+  const eps = (m.videos || []).filter(v => v.season !== undefined);
+  const seasons = [...new Set(eps.map(v => v.season))].sort((a,b) => (a || 999) - (b || 999));
+  const firstEp = eps.filter(v => v.season > 0).sort((a,b) => a.season - b.season || a.episode - b.episode)[0] || { season: 1, episode: 1 };
+  let selectedEp = { season: firstEp.season, episode: firstEp.episode };
+  let selectedProvider = getPreferredServer();
+  if (!STREAM_SERVICES.some(p => p.id === selectedProvider)) selectedProvider = "vidlink";
+  if (getAdFreeOnly() && !STREAM_SERVICES.find(p => p.id === selectedProvider)?.adFreeObserved) selectedProvider = "vidlink";
+
+  modal.innerHTML = `
+    <div class="m-hero" id="mhero" style="background-image:url('${esc(bgOf(m))}')">
+      <button class="close" data-close aria-label="Close">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="m-head">
+        <div class="m-poster"><img src="${esc(posterOf(m))}" alt="" onerror="this.remove()"></div>
+        <div>
+      <h2>${esc(m.name)}</h2>
+      <div class="meta">
+        <span class="star">★ ${rating(m)}</span><span>${esc(yearOf(m))}</span>
+        ${m.runtime ? `<span>${esc(m.runtime)}</span>` : ""}
+        ${type === "series" && seasons.length ? `<span>${seasons.filter(Boolean).length} season${seasons.filter(Boolean).length === 1 ? "" : "s"}</span>` : ""}
+        ${genres.map(g => `<span>${esc(g)}</span>`).join("<span>·</span>")}
+      </div>
+        </div>
+      </div>
+      <div class="m-layout">
+      <div class="m-main">
+      ${m.awards ? `<p class="tagline">${esc(m.awards)}</p>` : ""}
+      <p class="overview">${esc(m.description || "No overview available.")}</p>
+      ${crew ? `<div class="crew">${crew}</div>` : ""}
+      <div class="btns">
+        <button class="btn btn-primary" id="serverPlay">▶ Watch ${type === "series" ? `S${selectedEp.season} E${selectedEp.episode}` : "movie"}</button>
+        ${ytId ? `<button class="btn btn-ghost" id="playBtn">Watch trailer</button>` : ""}
+        <button class="btn btn-ghost" id="wlBtn">${wlHas(m.id) ? "✓ In watchlist" : "+ Watchlist"}</button>
+        <a class="btn btn-ghost" href="https://www.imdb.com/title/${esc(m.id)}/" target="_blank" rel="noopener">IMDb ↗</a>
+      </div>
+
+      ${seasons.length ? `<div class="section-label">Episodes</div>
+        <div class="toolbar"><select id="seasonSel">${seasons.map(s => `<option value="${s}">${s ? `Season ${s}` : "Specials"}</option>`).join("")}</select></div>
+        <div class="episodes" id="episodes"></div>` : ""}
+
+      ${cast.length ? `<div class="section-label">Cast</div>
+        <div class="cast">${cast.map(n => `<div class="person">
+          <div class="face">${esc(n.split(" ").map(w => w[0]).join("").slice(0, 2))}</div>
+          <b>${esc(n)}</b></div>`).join("")}</div>` : ""}
+      </div>
+      <aside class="m-side">
+      <div class="playback-panel">
+        <div class="section-label" style="margin-top:0">Playback servers</div>
+        <label class="adfree-toggle">
+          <input id="adFreeOnly" type="checkbox" ${getAdFreeOnly() ? "checked" : ""}>
+          <span><b>Prefer no ads</b><small>Uses only VidLink (no ads seen in your test). Not a guaranteed ad blocker.</small></span>
+        </label>
+        <div id="serverChoices" class="server-choices">
+          ${STREAM_SERVICES.map(p => `<button type="button" class="server-choice" data-server="${p.id}">
+            <b>${esc(p.name)}</b><small>${p.adFreeObserved ? "No ads seen in test" : "Ads observed · optional backup"}</small>
+          </button>`).join("")}
+        </div>
+        <p id="playerState" class="play-status" role="status" aria-live="polite">Choose a server or press Watch.</p>
+        <details class="tmdb-details" ${!tmdbIdFor(m) ? "open" : ""}>
+          <summary>TMDB ID ${tmdbIdFor(m) ? `· ${esc(tmdbIdFor(m))}` : "· Required to play"}</summary>
+          <div class="tmdb-editor">
+            <label for="tmdbManual">TMDB ID for this ${type === "series" ? "show" : "movie"}</label>
+            <input id="tmdbManual" inputmode="numeric" type="text" pattern="[0-9]+" value="${esc(tmdbIdFor(m))}" placeholder="e.g. 786892">
+            <button type="button" class="btn btn-ghost" id="tmdbSave">Save ID</button>
+          </div>
+        </details>
+        <p class="security-note">External players require unrestricted iframes in your tests. kasierWatch cannot block ads, popups or redirects generated inside these third-party players. Use a browser-level blocker if desired. Only play content you are allowed to access.</p>
+      </div>
+
+      <div class="section-label">Where to watch legally</div>
+      <div id="providers"><div class="muted">Checking…</div></div>
+
+      </aside>
+      </div>
+    </div>`;
+
+  const state = $("#playerState");
+  const updateChoices = () => {
+    const only = getAdFreeOnly();
+    modal.querySelectorAll("[data-server]").forEach(button => {
+      const provider = STREAM_SERVICES.find(p => p.id === button.dataset.server);
+      const blocked = only && !provider.adFreeObserved;
+      button.disabled = blocked;
+      button.classList.toggle("selected", selectedProvider === provider.id && !blocked);
+      button.setAttribute("aria-pressed", String(selectedProvider === provider.id && !blocked));
+      button.title = blocked ? "Turn off Prefer no ads to try this ad-supported backup" : `Play using ${provider.name}`;
+    });
+  };
+  const startProvider = (providerId) => {
+    const provider = STREAM_SERVICES.find(p => p.id === providerId);
+    if (!provider || (getAdFreeOnly() && !provider.adFreeObserved)) {
+      state.textContent = "This server is excluded by your no-ads preference.";
+      return;
+    }
+    const url = embedUrl(provider, m, selectedEp);
+    if (!url) {
+      state.textContent = "Missing or invalid TMDB ID. Expand the TMDB ID section, enter the correct ID, then try again.";
+      $("#tmdbManual").focus();
+      return;
+    }
+    selectedProvider = providerId;
+    setLocal(SERVER_KEY, providerId);
+    updateChoices();
+    const episodeLabel = type === "series" ? ` · S${selectedEp.season} E${selectedEp.episode}` : "";
+    state.textContent = `Opening ${provider.name}${episodeLabel}. A loaded iframe does not prove playback is working.${provider.adFreeObserved ? "" : " Warning: ads were seen on this provider."}`;
+    playOnServer(url, provider.name);
+    if (type === "series") $("#serverPlay").textContent = `▶ Watch S${selectedEp.season} E${selectedEp.episode}`;
+  };
+
+  modal.querySelectorAll("[data-server]").forEach(button => {
+    button.onclick = () => startProvider(button.dataset.server);
+  });
+  $("#adFreeOnly").onchange = e => {
+    setLocal(PREFERENCE_KEY, String(e.target.checked));
+    if (e.target.checked && !STREAM_SERVICES.find(p => p.id === selectedProvider)?.adFreeObserved) {
+      selectedProvider = "vidlink";
+      const hadPlayer = !!$("#mhero iframe");
+      $("#mhero iframe")?.remove();
+      $("#mhero").classList.remove("playing");
+      state.textContent = "VidFast stopped. VidLink is selected; press Watch to continue without the ad-supported backup.";
+      if (!hadPlayer) state.textContent = "Only VidLink is available while Prefer no ads is enabled.";
+    } else {
+      state.textContent = e.target.checked ? "Only VidLink is available." : "VidFast is available but ads were observed in testing.";
+    }
+    updateChoices();
+  };
+  $("#tmdbSave").onclick = () => {
+    const input = $("#tmdbManual");
+    const idValue = input.value.trim();
+    if (!numericId(idValue)) {
+      state.textContent = "Please enter a valid positive numeric TMDB ID.";
+      input.focus();
+      return;
+    }
+    setLocal(TMDB_OVERRIDE_PREFIX + m.id, idValue);
+    m.moviedb_id = idValue;
+    $(".tmdb-details summary").textContent = `TMDB ID · ${idValue}`;
+    state.textContent = "TMDB ID saved for this title. Press Watch to try playback.";
+    renderProviders(m);
+  };
+  $("#serverPlay").onclick = () => startProvider(selectedProvider);
+  if (ytId) {
+    $("#playBtn").onclick = () => {
+      const h = $("#mhero");
+      h.querySelectorAll("iframe").forEach(f => f.remove());
+      h.classList.add("playing");
+      const frame = document.createElement("iframe");
+      frame.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(ytId)}?autoplay=1&rel=0`;
+      frame.title = "Trailer";
+      frame.allow = "autoplay; encrypted-media; picture-in-picture";
+      frame.allowFullscreen = true;
+      h.appendChild(frame);
+      state.textContent = "Playing trailer. Choose a playback server to switch back.";
+    };
+    if (autoplay) $("#playBtn").click();
+  }
+  $("#wlBtn").onclick = e => {
+    e.currentTarget.textContent = wlToggle(m) ? "✓ In watchlist" : "+ Watchlist";
+    if (location.hash === "#watchlist") viewWatchlist();
+  };
+
+  if (seasons.length) {
+    const renderSeason = s => {
+      $("#episodes").innerHTML = eps.filter(v => v.season === s).sort((a,b) => a.episode - b.episode).map(v => `
+        <div class="ep ${Number(v.season) === Number(selectedEp.season) && Number(v.episode) === Number(selectedEp.episode) ? "active-ep" : ""}">
+          <div class="ep-thumb">${v.thumbnail ? `<img loading="lazy" src="${esc(v.thumbnail)}" alt="" onerror="this.remove()">` : ""}<span>${v.episode}</span></div>
+          <div class="ep-info">
+            <b>${v.episode}. ${esc(v.name || v.title || `Episode ${v.episode}`)}</b>
+            <small>${v.released ? new Date(v.released).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : ""}${v.rating ? ` · ★ ${esc(v.rating)}` : ""}</small>
+            <p>${esc(v.overview || v.description || "")}</p>
+          </div>
+          <button class="ep-play" data-ep="${v.season}:${v.episode}" aria-label="Play episode ${v.episode}">▶</button>
+        </div>`).join("");
+    };
+    $("#episodes").onclick = e => {
+      const b = e.target.closest("[data-ep]");
+      if (!b) return;
+      const [season, episode] = b.dataset.ep.split(":").map(Number);
+      selectedEp = { season, episode };
+      $("#seasonSel").value = String(season);
+      renderSeason(season);
+      startProvider(selectedProvider);
+    };
+    const first = seasons.find(Boolean) ?? seasons[0];
+    $("#seasonSel").value = first;
+    renderSeason(first);
+    $("#seasonSel").onchange = e => renderSeason(+e.target.value);
+  }
+  updateChoices();
+  if (!tmdbIdFor(m)) state.textContent = "This title has no TMDB ID from Cinemeta. Enter its TMDB ID below to enable playback.";
+  renderProviders(m);
+}
+
+async function renderProviders(m) {
+  const box = $("#providers");
+  const jw = `https://www.justwatch.com/${REGION.toLowerCase()}/search?q=${encodeURIComponent(m.name)}`;
+  const fallback = `<a class="prov-link" href="${jw}" target="_blank" rel="noopener">Find streaming options on JustWatch ↗</a>`;
+  if (!TMDB_API_KEY.trim() || !tmdbIdFor(m)) { box.innerHTML = fallback; return; }
+  try {
+    const r = (await tmdb(`/${m.type === "series" ? "tv" : "movie"}/${tmdbIdFor(m)}/watch/providers`)).results?.[REGION];
+    const logo = p => `<div class="prov" title="${esc(p.provider_name)}"><img src="https://image.tmdb.org/t/p/w92${p.logo_path}" alt="${esc(p.provider_name)}"></div>`;
+    const group = (label, arr) => arr?.length ? `<div class="prov-group"><span>${label}</span>${arr.map(logo).join("")}</div>` : "";
+    const stream = [...(r?.flatrate || []), ...(r?.free || []), ...(r?.ads || [])];
+    if (!r || !(stream.length || r.rent || r.buy)) { box.innerHTML = `<div class="muted">Not currently available to stream, rent or buy in ${REGION}.</div>`; return; }
+    box.innerHTML = `<div class="providers">${group("Stream", stream)}${group("Rent", r.rent)}${group("Buy", r.buy)}</div>
+      <a class="prov-link" href="${esc(r.link)}" target="_blank" rel="noopener">See all options ↗</a>`;
+  } catch { box.innerHTML = fallback; }
+}
+function closeDetail() { overlay.classList.remove("open"); modal.innerHTML = ""; document.body.style.overflow = ""; }
+
+/* ---------- Events ---------- */
+document.addEventListener("click", e => {
+  const open = e.target.closest("[data-open]");
+  if (open) return openDetail(open.dataset.open, !!open.dataset.play);
+  if (e.target.closest("[data-close]") || e.target === overlay) return closeDetail();
+
+  const sc = e.target.closest("[data-scroll]");
+  if (sc) { const t = sc.closest(".row").querySelector(".track"); t.scrollBy({ left: t.clientWidth * 0.85 * +sc.dataset.scroll, behavior: "smooth" }); return; }
+
+  const dt = e.target.closest("[data-dtype]");
+  if (dt) { ds.type = dt.dataset.dtype; if (!GENRES[ds.type].includes(ds.genre)) ds.genre = ""; viewDiscover().catch(showError); return; }
+  const so = e.target.closest("[data-dsort]");
+  if (so) { ds.sort = so.dataset.dsort; viewDiscover().catch(showError); return; }
+  const g = e.target.closest("[data-genre]");
+  if (g) { ds.genre = g.dataset.genre; viewDiscover().catch(showError); return; }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDetail(); });
+
+let searchTimer;
+$("#q").addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  searchTimer = setTimeout(() => { location.hash = q ? `search=${encodeURIComponent(q)}` : "home"; }, 350);
+});
+window.addEventListener("scroll", () => $("#hdr").classList.toggle("solid", scrollY > 40), { passive: true });
+
+/* ---------- Router ---------- */
+function route() {
+  const h = location.hash.slice(1) || "home";
+  document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("active", h.startsWith(a.dataset.nav)));
+  window.scrollTo(0, 0);
+  if (h.startsWith("search=")) return viewSearch(decodeURIComponent(h.slice(7))).catch(showError);
+  if (h === "discover") return viewDiscover().catch(showError);
+  if (h === "watchlist") return viewWatchlist();
+  return viewHome().catch(showError);
+}
+window.addEventListener("hashchange", route);
+loadLibrary().finally(route);
+</script>
+</body>
+</html>
